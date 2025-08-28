@@ -1,29 +1,42 @@
-import AdvantagesSection from "./components/AdvantagesSection";
-import Banner from "./components/Banner";
-import CourtListSection from "./components/CourtListSection";
-import { FeaturesSection } from "./components/FeaturesSection";
-import Footer from "./components/Footer";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import PadelCourts from "./components/PadelCourts";
-import TestimonialsSection from "./components/TestimonialsSection";
-// import HomePage from "./pages/HomePage";
+import Footer from "./components/Footer";
+import HomePage from "./pages/HomePage";
+import LapanganPage from "./pages/LapanganPage";
+import JadwalPage from "./pages/JadwalPage";
+import ProfilePage from "./pages/ProfilePage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
+function Layout({ children }) {
+  const location = useLocation();
 
+  // path yang tidak butuh navbar & footer
+  const hideLayout = ["/login", "/register"].includes(location.pathname);
 
-
+  return (
+    <div className="font-jakarta">
+      {!hideLayout && <Navbar />}
+      {children}
+      {!hideLayout && <Footer />}
+    </div>
+  );
+}
 
 function App() {
   return (
-    <div className="font-jakarta">
-      <Navbar />
-      <Banner />
-      <PadelCourts />
-      <FeaturesSection />
-      <AdvantagesSection />
-      {/* <CourtListSection /> */}
-      <TestimonialsSection />
-      <Footer />
-    </div>
+    <Router>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/lapangan" element={<LapanganPage />} />
+          <Route path="/jadwal" element={<JadwalPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </Layout>
+    </Router>
   );
 }
 

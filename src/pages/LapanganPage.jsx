@@ -1,11 +1,21 @@
-import { Calendar, MapPin } from "lucide-react"; // icon modern
+import { useState, useEffect } from "react"
+import { Calendar, MapPin } from "lucide-react"
+import axios from "axios"
 
 export default function LapanganPage() {
-  const courts = [
-    { id: 1, name: "Lapangan Padel A", location: "Surabaya", price: "Rp150.000 / jam", image: "https://source.unsplash.com/400x250/?court,sport" },
-    { id: 2, name: "Lapangan Padel B", location: "Jakarta", price: "Rp200.000 / jam", image: "https://source.unsplash.com/400x250/?tennis,court" },
-    { id: 3, name: "Lapangan Padel C", location: "Bandung", price: "Rp180.000 / jam", image: "https://source.unsplash.com/400x250/?stadium,court" },
-  ];
+  const [courts, setCourts] = useState([])
+
+  useEffect(() => {
+    const fetchCourts = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/courts")
+        setCourts(response.data)
+      } catch (error) {
+        console.error("Gagal fetch courts:", error)
+      }
+    }
+    fetchCourts()
+  }, [])
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-6">
@@ -20,7 +30,7 @@ export default function LapanganPage() {
           >
             {/* Gambar Lapangan */}
             <img
-              src={court.image}
+              src={`http://127.0.0.1:8000/storage/${court.image}`}
               alt={court.name}
               className="w-full h-48 object-cover"
             />
@@ -36,7 +46,9 @@ export default function LapanganPage() {
                 <span>{court.location}</span>
               </div>
 
-              <p className="text-lg font-bold text-green-700">{court.price}</p>
+              <p className="text-lg font-bold text-green-700">
+                {court.price} / jam
+              </p>
 
               <button className="mt-5 w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition">
                 <Calendar className="w-4 h-4" />
@@ -47,5 +59,5 @@ export default function LapanganPage() {
         ))}
       </div>
     </div>
-  );
+  )
 }

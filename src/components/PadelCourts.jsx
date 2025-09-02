@@ -2,20 +2,27 @@
 
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
-import Image from "../assets/images/Padel.jpg"
 import { Link } from "react-router-dom"
-
-const PadelCourts = [
-  { id: 1, name: "Jakarta Padel", courts: 8, image: Image, location: "Jakarta, Indonesia", price: "Rp200.000 / jam", description: "Lapangan indoor dengan fasilitas lengkap." },
-  { id: 2, name: "Surabaya Padel", courts: 4, image: Image, location: "Surabaya, Indonesia", price: "Rp150.000 / jam", description: "Lapangan outdoor dengan pemandangan indah." },
-  { id: 3, name: "Bandung Padel", courts: 6, image: Image, location: "Bandung, Indonesia", price: "Rp180.000 / jam", description: "Lapangan nyaman di tengah kota Bandung." },
-  { id: 4, name: "Bali Padel", courts: 5, image: Image, location: "Bali, Indonesia", price: "Rp250.000 / jam", description: "Lapangan dekat pantai dengan suasana tropis." },
-]
+import axios from "axios"
 
 function LocationSection() {
+  const [courts, setCourts] = useState([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
-  const [selectedCourt, setSelectedCourt] = useState(null) // state untuk modal
+  const [selectedCourt, setSelectedCourt] = useState(null)
+
+  // Fetch data dari API
+  useEffect(() => {
+    const fetchCourts = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/api/courts")
+        setCourts(response.data)
+      } catch (error) {
+        console.error("Gagal fetch courts:", error)
+      }
+    }
+    fetchCourts()
+  }, [])
 
   // Cek ukuran layar
   useEffect(() => {
@@ -25,17 +32,20 @@ function LocationSection() {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % PadelCourts.length)
-  const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + PadelCourts.length) % PadelCourts.length)
+  const nextSlide = () =>
+    setCurrentIndex((prev) => (prev + 1) % courts.length)
+  const prevSlide = () =>
+    setCurrentIndex((prev) => (prev - 1 + courts.length) % courts.length)
 
   const visibleCourts = () => {
-    const courts = []
+    const visible = []
     const visibleCount = isMobile ? 1 : 3
     for (let i = 0; i < visibleCount; i++) {
-      const index = (currentIndex + i) % PadelCourts.length
-      courts.push(PadelCourts[index])
+      if (courts.length === 0) break
+      const index = (currentIndex + i) % courts.length
+      visible.push(courts[index])
     }
-    return courts
+    return visible
   }
 
   return (
@@ -44,16 +54,14 @@ function LocationSection() {
         <div className="flex flex-col lg:flex-row items-center gap-8">
           {/* Left Content */}
           <div className="lg:w-1/3 space-y-6 text-center lg:text-left">
-            <div>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">
-                FIND BY LOCATION
-              </p>
-              <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-                Discover padel court
-                <br />
-                in your area
-              </h2>
-            </div>
+            <p className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">
+              FIND BY LOCATION
+            </p>
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+              Discover padel court
+              <br />
+              in your area
+            </h2>
             <div>
               <Link to="/lapangan">
                 <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-8 py-3 rounded-full text-base font-medium">
@@ -70,10 +78,10 @@ function LocationSection() {
                 <div
                   key={court.id}
                   className="flex-shrink-0 w-72 sm:w-80 h-80 relative rounded-2xl overflow-hidden group cursor-pointer"
-                  onClick={() => setSelectedCourt(court)} // buka modal
+                  onClick={() => setSelectedCourt(court)}
                 >
                   <img
-                    src={court.image || "/placeholder.svg"}
+                    src={`http://127.0.0.1:8000/storage/${court.image}`}
                     alt={court.name}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
@@ -107,7 +115,6 @@ function LocationSection() {
       {selectedCourt && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-lg max-w-lg w-full relative p-6">
-            {/* Close Button */}
             <button
               onClick={() => setSelectedCourt(null)}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100"
@@ -116,7 +123,7 @@ function LocationSection() {
             </button>
 
             <img
-              src={selectedCourt.image}
+              src={`http://127.0.0.1:8000/storage/${selectedCourt.image}`}
               alt={selectedCourt.name}
               className="w-full h-56 object-cover rounded-xl mb-4"
             />
@@ -125,7 +132,19 @@ function LocationSection() {
             <p className="text-green-700 font-semibold">{selectedCourt.price}</p>
             <p className="mt-3 text-gray-700">{selectedCourt.description}</p>
 
-            <button className="mt-5 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-medium">
+            <button
+              onClick={() => {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                  // kalau belum login, redirect ke /login
+                  window.location.href = "/login";
+                } else {
+                  // kalau sudah login, arahkan ke halaman booking dengan ID lapangan
+                  window.location.href = `/booking/${selectedCourt.id}`;
+                }
+              }}
+              className="mt-5 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-medium"
+            >
               Booking Sekarang
             </button>
           </div>

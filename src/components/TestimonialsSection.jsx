@@ -1,48 +1,14 @@
 "use client";
 
-import { useState } from "react";
-
-const testimonials = [
-  {
-    id: 1,
-    name: "Ahmad Rizki",
-    location: "Jakarta",
-    rating: 5,
-    comment:
-      "Lapangan sangat bagus dan bersih. Pelayanan ramah dan booking online sangat mudah. Pasti akan kembali lagi!",
-    avatar: "/placeholder.svg?height=60&width=60",
-  },
-  {
-    id: 2,
-    name: "Sari Dewi",
-    location: "Surabaya",
-    rating: 5,
-    comment: "Fasilitas lengkap dan harga terjangkau. Anak-anak juga suka bermain di sini. Recommended banget!",
-    avatar: "/placeholder.svg?height=60&width=60",
-  },
-  {
-    id: 3,
-    name: "Budi Santoso",
-    location: "Bandung",
-    rating: 4,
-    comment: "Lokasi strategis dan mudah dijangkau. Lapangan standar internasional, cocok untuk latihan serius.",
-    avatar: "/placeholder.svg?height=60&width=60",
-  },
-  {
-    id: 4,
-    name: "Maya Putri",
-    location: "Bali",
-    rating: 5,
-    comment: "Pengalaman bermain padel terbaik! Staff profesional dan lapangan selalu dalam kondisi prima.",
-    avatar: "/placeholder.svg?height=60&width=60",
-  },
-];
+import { useState, useEffect } from "react";
 
 // Komponen SVG Bintang
 function StarIcon({ filled }) {
   return (
     <svg
-      className={`w-5 h-5 ${filled ? "text-yellow-400 fill-current" : "text-gray-300"}`}
+      className={`w-5 h-5 ${
+        filled ? "text-yellow-400 fill-current" : "text-gray-300"
+      }`}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 20 20"
       fill="currentColor"
@@ -55,29 +21,93 @@ function StarIcon({ filled }) {
 // Panah kiri & kanan
 function ArrowLeftIcon() {
   return (
-    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+    <svg
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M15 19l-7-7 7-7"
+      />
     </svg>
   );
 }
 function ArrowRightIcon() {
   return (
-    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+    <svg
+      className="h-5 w-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        d="M9 5l7 7-7 7"
+      />
     </svg>
   );
 }
 
 export default function TestimonialsSection() {
+  const [testimonials, setTestimonials] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/reviews");
+        if (!res.ok) throw new Error("Gagal memuat review");
+        const data = await res.json();
+
+        // Map data dari API biar konsisten
+        const mapped = data.map((item) => ({
+          id: item.id,
+          name: item.user?.name || "Anonim",
+          location: "Indonesia", // API tidak punya → dummy
+          rating: item.rating || 0,
+          comment: item.comment || "Tidak ada komentar.",
+          avatar: "/placeholder.svg?height=60&width=60", // API tidak punya → dummy
+        }));
+
+        setTestimonials(mapped);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    fetchReviews();
+  }, []);
+
   const nextTestimonial = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+    setCurrentIndex((prev) =>
+      testimonials.length > 0 ? (prev + 1) % testimonials.length : 0
+    );
   };
 
   const prevTestimonial = () => {
-    setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    setCurrentIndex((prev) =>
+      testimonials.length > 0
+        ? (prev - 1 + testimonials.length) % testimonials.length
+        : 0
+    );
   };
+
+  if (testimonials.length === 0) {
+    return (
+      <section className="py-16 bg-gray-100 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          Testimoni & Review
+        </h2>
+        <p className="text-gray-500">Belum ada review tersedia.</p>
+      </section>
+    );
+  }
 
   const currentTestimonial = testimonials[currentIndex];
 
@@ -85,9 +115,12 @@ export default function TestimonialsSection() {
     <section className="py-16 bg-gray-100">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Testimoni & Review</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            Testimoni & Review
+          </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Dengar langsung dari para pemain yang telah merasakan pengalaman bermain di lapangan kami
+            Dengar langsung dari para pemain yang telah merasakan pengalaman
+            bermain di lapangan kami
           </p>
         </div>
 
@@ -96,7 +129,7 @@ export default function TestimonialsSection() {
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="flex-shrink-0">
                 <img
-                  src={currentTestimonial.avatar || "/placeholder.svg"}
+                  src={currentTestimonial.avatar}
                   alt={currentTestimonial.name}
                   className="w-16 h-16 rounded-full object-cover"
                 />
@@ -114,8 +147,12 @@ export default function TestimonialsSection() {
                 </p>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900">{currentTestimonial.name}</h4>
-                  <p className="text-gray-500 text-sm">{currentTestimonial.location}</p>
+                  <h4 className="font-semibold text-gray-900">
+                    {currentTestimonial.name}
+                  </h4>
+                  <p className="text-gray-500 text-sm">
+                    {currentTestimonial.location}
+                  </p>
                 </div>
               </div>
             </div>
